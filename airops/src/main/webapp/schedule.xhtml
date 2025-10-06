@@ -1,0 +1,245 @@
+<ui:composition template="/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+    <ui:define name="content">
+        <h2>Planificación de vuelos</h2>
+
+        <h:outputStylesheet>
+            /* ---- Form grid responsive sin PrimeFlex ---- */
+            .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-column-gap: 1.25rem;
+            grid-row-gap: .75rem;
+            }
+            .form-field {
+            display: flex;
+            flex-direction: column;
+            }
+            .form-field label {
+            font-weight: 600;
+            color: #495057;
+            margin: 0 0 .25rem;
+            }
+            .form-field .w-full {
+            width: 100%;
+            }
+            .form-field .ui-message,
+            .form-field .p-message {
+            margin: .25rem 0 0 0;
+            }
+            .form-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: .5rem;
+            margin-top: .75rem;
+            }
+            @media (max-width: 992px) {
+            .form-grid { grid-template-columns: 1fr; }
+            }
+            .ui-dialog .ui-dialog-content {
+            padding-top: .5rem;
+            }
+            .colLabel {
+            width: 180px;
+            padding: .5rem .75rem .25rem 0;
+            text-align: right;
+            vertical-align: top;
+            white-space: nowrap;
+            font-weight: 600;
+            color: #495057;
+            }
+            .colField {
+            width: 320px;
+            padding: .25rem .75rem .5rem 0;
+            vertical-align: top;
+            }
+            .w100 { width: 100%; }
+            .fieldMsg .ui-message, .fieldMsg .p-message { margin:.25rem 0 0 0; }
+
+            .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+            }
+        </h:outputStylesheet>
+
+        <h:form id="frmFlights">
+
+            <div class="toolbar">
+                <p:commandButton value="Nuevo vuelo" icon="pi pi-plus" styleClass="mb-3"
+                                 actionListener="#{flightBean.newFlight}"
+                                 process="@this"
+                                 update=":frmFlights:dlgFlight"
+                                 resetValues="true"/>
+
+            </div>
+
+
+            <p:schedule id="cal" value="#{flightBean.schedule}" widgetVar="sch"
+                        locale="es" timeZone="GMT-6" allDaySlot="false"
+                        view="dayGridMonth" style="height:600px">
+                <p:ajax event="eventSelect" listener="#{flightBean.onEventSelect}"
+                        update=":frmFlights:dlgDetail"/>
+            </p:schedule>
+
+            <!-- Diálogo de detalle -->
+
+            <p:dialog id="dlgDetail" widgetVar="dlgDetail" header="Detalle del vuelo"
+                      visible="#{flightBean.detailVisible}" modal="true" appendTo="@form"
+                      resizable="false" draggable="false" width="720">
+                <h:panelGrid columns="2" columnClasses="w-12rem,w-auto" styleClass="p-fluid">
+                    <h:outputText value="Número"/>
+                    <h:outputText value="#{flightBean.selected.flightNumber}"/>
+
+                    <h:outputText value="Origen (IATA)"/>
+                    <h:outputText value="#{flightBean.selected.originIata}"/>
+
+                    <h:outputText value="Destino (IATA)"/>
+                    <h:outputText value="#{flightBean.selected.destinationIata}"/>
+
+                    <h:outputText value="Salida"/>
+                    <h:outputText value="#{flightBean.selected.departure}"/>
+
+                    <h:outputText value="Llegada"/>
+                    <h:outputText value="#{flightBean.selected.arrival}"/>
+
+                    <h:outputText value="Pasajeros"/>
+                    <h:outputText value="#{flightBean.selected.passengers}"/>
+
+                    <h:outputText value="Piloto"/>
+                    <h:outputText
+                            value="#{flightBean.selected.pilot.fullName} (#{flightBean.selected.pilot.licenseCode})"/>
+
+                    <h:outputText value="Aeronave"/>
+                    <h:outputText
+                            value="#{flightBean.selected.aircraft.tailNumber} - #{flightBean.selected.aircraft.model}"/>
+                </h:panelGrid>
+            </p:dialog>
+
+
+            <!-- Diálogo del formulario -->
+            <p:dialog id="dlgFlight" header="Detalle del vuelo" widgetVar="dlgFlight"
+                      modal="true" appendTo="@form" baseZIndex="100000"
+                      resizable="false" draggable="false" width="920"
+                      visible="#{flightBean.dialogVisible}">
+
+                <p:messages id="msgFlight" showSummary="true" showDetail="false"
+                            closable="true" layout="list" styleClass="fieldErrors"/>
+                <p:focus context="dlgFlight" for=":frmFlights:dlgFlight"/>
+
+                <!-- Formulario ordenado con CSS Grid -->
+                <div class="form-grid">
+
+                    <!-- Número -->
+                    <div class="form-field">
+                        <label for="fn">Número (AA-1234) *</label>
+                        <p:inputText id="fn"
+                                     value="#{flightBean.flight.flightNumber}"
+                                     label="Número de vuelo"
+                                     placeholder="AA-1234"
+                                     styleClass="w-full"
+                                     oninput="this.value=this.value.toUpperCase()"/>
+                    </div>
+
+                    <!-- Pasajeros -->
+                    <div class="form-field">
+                        <label for="psg">Pasajeros</label>
+                        <p:spinner id="psg" value="#{flightBean.flight.passengers}"
+                                   min="1" max="350" styleClass="w-full"/>
+                    </div>
+
+                    <!-- Origen -->
+                    <div class="form-field">
+                        <label for="org">Origen (IATA) *</label>
+                        <p:inputText id="org" value="#{flightBean.flight.originIata}"
+                                     label="Origen (IATA)"
+                                     placeholder="GUA"
+                                     styleClass="w-full"
+                                     oninput="this.value=this.value.toUpperCase()"/>
+                    </div>
+
+                    <!-- Destino -->
+                    <div class="form-field">
+                        <label for="dst">Destino (IATA) *</label>
+                        <p:inputText id="dst" value="#{flightBean.flight.destinationIata}"
+                                     label="Destino (IATA)"
+                                     placeholder="SAL"
+                                     styleClass="w-full"
+                                     oninput="this.value=this.value.toUpperCase()"/>
+                    </div>
+
+                    <!-- Salida -->
+                    <div class="form-field">
+                        <label for="dep">Salida *</label>
+                        <p:datePicker id="dep"
+                                      value="#{flightBean.flight.departure}"
+                                      showTime="true" showIcon="true" iconDisplay="input"
+                                      hourFormat="24" pattern="yyyy-MM-dd HH:mm"
+                                      label="Salida" styleClass="w-full"/>
+                    </div>
+
+                    <!-- Llegada -->
+                    <div class="form-field">
+                        <label for="arr">Llegada *</label>
+                        <p:datePicker id="arr"
+                                      value="#{flightBean.flight.arrival}"
+                                      showTime="true" showIcon="true" iconDisplay="input"
+                                      hourFormat="24" pattern="yyyy-MM-dd HH:mm"
+                                      label="Llegada" styleClass="w-full"/>
+                    </div>
+
+                    <!-- Piloto -->
+                    <div class="form-field">
+                        <label for="pil">Piloto *</label>
+                        <p:selectOneMenu id="pil"
+                                         value="#{flightBean.flight.pilot}"
+                                         converter="pilotConverter"
+                                         filter="true" filterMatchMode="contains"
+                                         placeholder="Seleccione..."
+                                         label="Piloto" styleClass="w-full">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{flightBean.pilots}" var="p"
+                                           itemValue="#{p}" itemLabel="#{p.fullName} (#{p.licenseCode})"/>
+                        </p:selectOneMenu>
+                    </div>
+
+                    <!-- Aeronave -->
+                    <div class="form-field">
+                        <label for="ac">Aeronave *</label>
+                        <p:selectOneMenu id="ac"
+                                         value="#{flightBean.flight.aircraft}"
+                                         converter="aircraftConverter"
+                                         filter="true" filterMatchMode="contains"
+                                         placeholder="Seleccione..."
+                                         label="Aeronave" styleClass="w-full">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{flightBean.aircraft}" var="a"
+                                           itemValue="#{a}" itemLabel="#{a.tailNumber} - #{a.model}"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <f:facet name="footer">
+                    <p:divider/>
+                    <div class="form-footer">
+                        <p:commandButton value="Guardar" icon="pi pi-check"
+                                         action="#{flightBean.save}"
+                                         process=":frmFlights:dlgFlight"
+                                         update=":global:msgs :frmFlights:cal :frmFlights:dlgFlight :frmFlights:msgFlight"
+                                         oncomplete="if (!args || !args.validationFailed) PF('dlgFlight').hide();"/>
+                        <p:commandButton value="Cancelar" icon="pi pi-times"
+                                         onclick="PF('dlgFlight').hide(); return false;"
+                                         styleClass="ui-button-secondary"/>
+                    </div>
+                </f:facet>
+            </p:dialog>
+
+        </h:form>
+    </ui:define>
+</ui:composition>
