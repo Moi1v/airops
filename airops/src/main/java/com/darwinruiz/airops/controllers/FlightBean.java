@@ -63,6 +63,60 @@ public class FlightBean implements Serializable {
         }
     }
 
+    public void editFlight() {
+        try {
+            if (selected != null && selected.getId() != null) {
+                // Cargar los datos del vuelo seleccionado en el formulario
+                this.flight = selected;
+                this.dialogVisible = true;
+
+                // Cerrar el diálogo de detalles (se abrirá el de edición)
+                this.detailVisible = false;
+            }
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error",
+                            "No se puede editar el vuelo: " + e.getMessage()));
+        }
+    }
+
+    public void delete() {
+        try {
+            if (selected != null && selected.getId() != null) {
+                // Guardar información del vuelo para el mensaje
+                String flightNumber = selected.getFlightNumber();
+
+                // Eliminar el vuelo seleccionado - pasar el objeto completo
+                flights.delete(selected);  // ← CAMBIADO: selected en lugar de selected.getId()
+
+                // Recargar el calendario
+                reloadSchedule();  // ← CORREGIDO: reloadSchedule() no reloadScheduled()
+
+                // Cerrar el diálogo de detalles
+                this.detailVisible = false;
+                this.selected = null;
+
+                // Mostrar mensaje de éxito
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_INFO,
+                                "Vuelo eliminado",
+                                "El vuelo " + flightNumber + " ha sido eliminado exitosamente"));
+            } else {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error",
+                                "No se ha seleccionado ningún vuelo para eliminar"));
+            }
+        } catch (Exception e) {
+            // Manejar errores
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error al eliminar",
+                            "No se pudo eliminar el vuelo: " + e.getMessage()));
+            e.printStackTrace();
+        }
+    }
 
     public void save() {
         Set<ConstraintViolation<Flight>> violations = validator.validate(flight);
@@ -82,6 +136,7 @@ public class FlightBean implements Serializable {
             FacesContext.getCurrentInstance().validationFailed();
             return;
         }
+
 
 
         flights.save(flight);

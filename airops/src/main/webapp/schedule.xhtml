@@ -66,6 +66,13 @@
             justify-content: flex-end;
             margin-bottom: 1rem;
             }
+
+            .button-group {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            }
         </h:outputStylesheet>
 
         <h:form id="frmFlights">
@@ -76,9 +83,7 @@
                                  process="@this"
                                  update=":frmFlights:dlgFlight"
                                  resetValues="true"/>
-
             </div>
-
 
             <p:schedule id="cal" value="#{flightBean.schedule}" widgetVar="sch"
                         locale="es" timeZone="GMT-6" allDaySlot="false"
@@ -88,7 +93,6 @@
             </p:schedule>
 
             <!-- Diálogo de detalle -->
-
             <p:dialog id="dlgDetail" widgetVar="dlgDetail" header="Detalle del vuelo"
                       visible="#{flightBean.detailVisible}" modal="true" appendTo="@form"
                       resizable="false" draggable="false" width="720">
@@ -119,10 +123,25 @@
                     <h:outputText
                             value="#{flightBean.selected.aircraft.tailNumber} - #{flightBean.selected.aircraft.model}"/>
                 </h:panelGrid>
+
+                <div class="button-group">
+                    <p:commandButton value="Editar" icon="pi pi-pencil"
+                                     action="#{flightBean.editFlight}"
+                                     process="@this"
+                                     update=":frmFlights:dlgFlight"
+                                     oncomplete="PF('dlgDetail').hide(); PF('dlgFlight').show();"/>
+
+                    <p:commandButton value="Eliminar" icon="pi pi-trash"
+                                     styleClass="ui-button-danger"
+                                     action="#{flightBean.delete}"
+                                     process="@this"
+                                     update=":frmFlights:cal :frmFlights:dlgDetail :global:msgs"
+                                     oncomplete="if(#{flightBean.detailVisible == false}) PF('dlgDetail').hide();"
+                                     onclick="return confirm('¿Está seguro de eliminar el vuelo #{flightBean.selected.flightNumber}?');"/>
+                </div>
             </p:dialog>
 
-
-            <!-- Diálogo del formulario -->
+            <!-- Diálogo del formulario (para nuevo y editar) -->
             <p:dialog id="dlgFlight" header="Detalle del vuelo" widgetVar="dlgFlight"
                       modal="true" appendTo="@form" baseZIndex="100000"
                       resizable="false" draggable="false" width="920"
